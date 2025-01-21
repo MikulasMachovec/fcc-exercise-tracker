@@ -46,23 +46,24 @@ app.post('/api/users/:_id/exercises', async (req,res)=>{
   if (date == "Invalid Date"){
     date = new Date().toDateString();
   }
-  // 678e83045f84f0218c897ffc
-  let filter = { _id: new ObjectId(userId) };
-  let update = {
-    $set: { 
-      description: inputDescription,
-      duration: numDuration,
-      date: date
+  // 678fc5e3acb56220cf408f8a
+  const user = await exercise.findOne({_id: new ObjectId(userId)});
+  //
+  let exerciseLog = {
+    description: inputDescription,
+    duration: numDuration,
+    date: date
+  };
+
+  const result = await exercise.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $push: {log: exerciseLog},
+      $inc: { count: 1 }
     }
-  }
-  const option = {
-    ReturnDocument: "after",
-    upsert: true
-  }
-  const result = await exercise.findOneAndUpdate(filter,update,option);
-  console.log(result);
+  )
   res.json({
-    username: result.username,
+    username: user.username,
     description: inputDescription,
     duration: numDuration,
     date: date,
@@ -72,9 +73,11 @@ app.post('/api/users/:_id/exercises', async (req,res)=>{
 })
 
 //get logs
-app.get('api/users/:_id/logs', async (req,res) => {
-  
-  res.json({ result: 'rel' })
+app.get('/api/users/:_id/logs', async (req,res) => {
+  const userId = req.params._id;
+  const userLog = await exercise.find({ _id: new ObjectId(userId) }).toArray();
+  console.log({userLog})
+  res.send({userLog})
 })
 
 
