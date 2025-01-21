@@ -76,8 +76,9 @@ app.post('/api/users/:_id/exercises', async (req,res)=>{
 app.get('/api/users/:_id/logs', async (req,res) => {
   const userId = req.params._id;
   const userLog = await exercise.find({ _id: new ObjectId(userId) }).toArray();
-  console.log({userLog})
-  res.send({userLog})
+  const[username, count, log ] = userLog
+
+  res.send(userLog[0])
 })
 
 
