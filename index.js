@@ -75,13 +75,56 @@ app.post('/api/users/:_id/exercises', async (req,res)=>{
 //get logs
 app.get('/api/users/:_id/logs', async (req,res) => {
   const userId = req.params._id;
-  const userLog = await exercise.find({ _id: new ObjectId(userId) }).toArray();
-  const[username, count, log ] = userLog
+  const { from, to, limit } = req.query;
+  console.log(req.url)
+  if(!ObjectId.isValid(userId)){
+    return req.statusCode(400).send({ error: "Invalid user ID" })
+  }
 
-  res.send(userLog[0])
+  const user = await exercise.find({ _id: new ObjectId(userId) }).toArray();
+
+  if(!user){
+    return req.statusCode(400).send({ error: "User not found" })  
+  }
+
+  let logs = user[0].log;
+
+  if(from){
+    const fromDate = new Date(from);
+    if(isNaN(fromDate)){
+      return req.statusCode(400).send({ error: "Invalid From date" })      
+    } else {
+      logs = logs.filter(log => new Date(log.date) >= fromDate)
+    }
+  }
+
+  if(to){
+    const toDate = new Date(to);
+    if(isNaN(toDate)){
+      return req.statusCode(400).send({ error: "Invalid To date" })
+    } else {
+      logs = logs.filter(log => new Date(log.date) <= toDate)
+    }
+  }
+
+  if(limit){
+    const limitNumber = parseInt(limit, 10);
+    if(isNaN(limitNumber) || limitNumber < 1){
+      return req.statusCode(400).send({ error: "Invalid limit value" })
+    } else{
+      logs = logs.slice(0, limitNumber);
+    }
+  }
+
+  const response = {
+    _id: user[0]._id,
+    username: user[0].username,
+    count: user[0].count, 
+    log: logs
+  }
+
+  res.send(response)
 })
-
-
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
